@@ -1,0 +1,326 @@
+{
+  "info": {
+    "name": "Stockwise Inventory API",
+    "description": "Auth, inventory, supply, reporting and required AI endpoints.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8082"
+    },
+    {
+      "key": "authToken",
+      "value": ""
+    },
+    {
+      "key": "productId",
+      "value": "1"
+    },
+    {
+      "key": "supplierId",
+      "value": "1"
+    },
+    {
+      "key": "purchaseOrderId",
+      "value": "1"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{authToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register staff",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"displayName\":\"Demo Staff\",\"email\":\"staff@example.com\",\"password\":\"ChangeMe123!\"}"
+            },
+            "url": "{{baseUrl}}/api/auth/register"
+          },
+          "description": "Creates a STAFF account. Sign in separately using the login request."
+        },
+        {
+          "name": "Login (saves token)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) { pm.collectionVariables.set('authToken', pm.response.json().token); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"admin@stockwise.local\",\"password\":\"SET_BOOTSTRAP_ADMIN_PASSWORD\"}"
+            },
+            "url": "{{baseUrl}}/api/auth/login"
+          }
+        },
+        {
+          "name": "Current user",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/auth/me"
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/auth/logout"
+          }
+        },
+        {
+          "name": "List users (admin)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/auth/users"
+          }
+        },
+        {
+          "name": "Change user role (admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"role\":\"MANAGER\"}"
+            },
+            "url": "{{baseUrl}}/api/auth/users/1/role"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Inventory & suppliers",
+      "item": [
+        {
+          "name": "Dashboard",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/dashboard"
+          }
+        },
+        {
+          "name": "Search/filter products",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/products?search=&status=LOW_STOCK"
+          }
+        },
+        {
+          "name": "Product detail",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/products/{{productId}}"
+          }
+        },
+        {
+          "name": "Create product (manager)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"sku\":\"HOM-024\",\"name\":\"Stoneware Mug\",\"category\":\"Home\",\"currentStock\":24,\"reorderLevel\":8,\"optimalStockLevel\":30,\"unitPrice\":18.50,\"costPrice\":8.25,\"unit\":\"pcs\",\"soldLast30Days\":0,\"supplierName\":\"Hearth Goods\"}"
+            },
+            "url": "{{baseUrl}}/api/products"
+          }
+        },
+        {
+          "name": "Low stock alerts",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/alerts/low-stock"
+          }
+        },
+        {
+          "name": "Suppliers",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/suppliers"
+          }
+        },
+        {
+          "name": "Supplier detail",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/suppliers/{{supplierId}}"
+          }
+        },
+        {
+          "name": "Sales report",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/reports/sales"
+          }
+        },
+        {
+          "name": "Stock movement report",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/reports/stock-movement"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Purchasing & stock",
+      "item": [
+        {
+          "name": "Purchase orders",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/purchase-orders"
+          }
+        },
+        {
+          "name": "Create draft PO (manager)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"supplierId\":{{supplierId}},\"expectedDeliveryDate\":\"2026-12-10\",\"items\":[{\"productId\":{{productId}},\"quantity\":12,\"unitCost\":20.00}]}"
+            },
+            "url": "{{baseUrl}}/api/purchase-orders"
+          }
+        },
+        {
+          "name": "Transition PO status (manager)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"status\":\"APPROVED\"}"
+            },
+            "url": "{{baseUrl}}/api/purchase-orders/{{purchaseOrderId}}/status"
+          }
+        },
+        {
+          "name": "Record stock movement",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"productId\":{{productId}},\"type\":\"STOCK_IN\",\"quantity\":5,\"referenceNote\":\"Cycle count\"}"
+            },
+            "url": "{{baseUrl}}/api/stock-transactions"
+          }
+        },
+        {
+          "name": "Stock transaction history",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/stock-transactions"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Mandatory AI",
+      "item": [
+        {
+          "name": "Forecast by product",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/ai/forecast/{{productId}}"
+          }
+        },
+        {
+          "name": "Optimize inventory thresholds",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/ai/optimize"
+          }
+        },
+        {
+          "name": "Purchase recommendations",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/ai/purchase-recommendations"
+          }
+        },
+        {
+          "name": "Inventory Q&A",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"question\":\"What are the top revenue products and which items need reorder attention?\"}"
+            },
+            "url": "{{baseUrl}}/api/ai/chat"
+          }
+        }
+      ]
+    }
+  ]
+}

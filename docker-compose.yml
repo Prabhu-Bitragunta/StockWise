@@ -1,0 +1,45 @@
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: supply_chain_mgmt
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-stockwise-local-only}
+    ports:
+      - "3307:3306"
+    volumes:
+      - stockwise_mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${DB_PASSWORD:-stockwise-local-only}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  backend:
+    build: ./backend
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      PORT: 8082
+      DATABASE_URL: jdbc:mysql://mysql:3306/supply_chain_mgmt
+      DB_USERNAME: root
+      DB_PASSWORD: ${DB_PASSWORD:-stockwise-local-only}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
+      BOOTSTRAP_ADMIN_EMAIL: ${BOOTSTRAP_ADMIN_EMAIL:-admin@stockwise.local}
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:?Set BOOTSTRAP_ADMIN_PASSWORD in .env}
+      APP_CORS_ALLOWED_ORIGIN_PATTERNS: ${APP_CORS_ALLOWED_ORIGIN_PATTERNS:-http://localhost:*,http://127.0.0.1:*,https://*.vercel.app}
+      AI_MODEL: ${AI_MODEL:-gemini-3.5-flash-lite}
+      AI_API_KEY: ${AI_API_KEY:-}
+      AI_BASE_URL: ${AI_BASE_URL:-https://generativelanguage.googleapis.com/v1beta/openai}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+    ports:
+      - "8082:8082"
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8082/api}
+    depends_on: [backend]
+    ports:
+      - "3000:80"
+volumes:
+  stockwise_mysql:
