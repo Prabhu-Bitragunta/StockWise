@@ -11,7 +11,7 @@ public class StockTransaction {
     @Column(nullable=false,length=20) private String type;
     @Column(nullable=false) private int quantity;
     @Column(name="reference_note",length=500) private String referenceNote;
-    @Column(name="transaction_date",nullable=false,columnDefinition="datetime(6) default current_timestamp(6)") private Instant transactionDate=Instant.now();
+    @Column(name="transaction_date",nullable=false,columnDefinition="timestamp(6) with time zone default current_timestamp") private Instant transactionDate=Instant.now();
     @Column(name="productName",length=160) private String legacyProductName;
     @Column(name="note",length=500) private String legacyNote;
     @Column(name="created_at",nullable=false) private Instant legacyCreatedAt=Instant.now();

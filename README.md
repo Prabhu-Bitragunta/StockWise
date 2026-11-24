@@ -1,49 +1,49 @@
 # Stockwise — VCube Hack Quest
 
-Responsive inventory and supply-chain management built with Spring Boot 3, Spring Security, MySQL, React, and Vite. It includes authenticated role-aware workflows, audit-friendly stock movements, itemized purchasing, reporting, and four live-data AI endpoints.
+Responsive inventory and supply-chain management built with Spring Boot 3, Spring Security, PostgreSQL, React, and Vite. It includes authenticated role-aware workflows, audit-friendly stock movements, itemized purchasing, reporting, and four live-data AI endpoints.
 
 ## Project layout
 
 - `backend/` — Spring Boot REST API, JPA domain, security, services, and database migration/seed logic.
 - `frontend/` — React/Vite dashboard with responsive layouts, charts, auth, inventory, supplier, purchasing, reports, and AI views.
-- `schema.sql` — reference MySQL schema (the app also upgrades the existing local schema additively on startup).
+- `schema.sql` — reference PostgreSQL schema (the app also upgrades the existing local schema additively on startup).
 - `postman_collection.json` — API requests with token capture on login.
-- `docker-compose.yml` — local container stack for the API, UI, and MySQL.
+- `docker-compose.yml` — local container stack for the API, UI, and PostgreSQL.
 
-## Run with your local MySQL
+## Run with your local PostgreSQL
 
-Prerequisites: Java 21, Node.js 20+, and MySQL 8. Create/select the `supply_chain_mgmt` database. Copy `.env.example` to `.env`, then set your MySQL password, a random JWT secret (at least 32 characters), and optionally a Gemini or OpenAI key. `.env` is ignored by Git.
+Prerequisites: Java 21, Node.js 20+, and PostgreSQL 15+. Create the `supply_chain_mgmt` database in PostgreSQL. Copy `.env.example` to `.env`, then set your PostgreSQL password, a random JWT secret (at least 32 characters), and optionally a Gemini or OpenAI key. `.env` is ignored by Git.
 
 ```sh
-cp .env.example .env
+Copy-Item .env.example .env
 # Edit .env with your local settings. Never paste the real secrets into source files.
 
-# Terminal 1 — API at http://localhost:8082
+# Terminal 1 — API at http://localhost:8082 (PowerShell)
 cd backend
-set -a; source ../.env; set +a
-./mvnw -Dmaven.repo.local=../work/maven-repo spring-boot:run
+Get-Content ..\.env | ForEach-Object { if ($_ -match '^\s*([^#=]+?)\s*=(.*)$') { [Environment]::SetEnvironmentVariable($Matches[1].Trim(), $Matches[2].Trim(), 'Process') } }
+.\mvnw.cmd "-Dmaven.repo.local=..\work\maven-repo" spring-boot:run
 
-# Terminal 2 — UI at http://localhost:5173
+# Terminal 2 — UI at http://localhost:5173 (PowerShell)
 cd frontend
-npm install
+npm ci
 npm run dev
 ```
 
-First startup preserves existing tables and data, adds missing fields, and fills demo catalog rows only as needed. Configure `BOOTSTRAP_ADMIN_EMAIL` and `BOOTSTRAP_ADMIN_PASSWORD` in `.env`; the configured account is promoted to `ADMIN` on startup. Registration creates `STAFF` accounts. Do not use demo/bootstrap credentials in a public deployment.
+First startup preserves existing tables and data, adds missing fields, and fills demo catalog rows only as needed. Configure `BOOTSTRAP_ADMIN_EMAIL` and `BOOTSTRAP_ADMIN_PASSWORD` in `.env`; the configured account is promoted to `ADMIN` on startup. New registrations must verify their email before signing in. Configure `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, and `MAIL_FROM` for email verification and password recovery. Passwords need at least 9 characters, including uppercase, lowercase, and a symbol. Do not use demo/bootstrap credentials in a public deployment.
 
 ## Docker Compose
 
-Set `DB_PASSWORD`, `JWT_SECRET`, and optional AI key in `.env`, then run from the repository root:
+Set `DB_PASSWORD`, `JWT_SECRET`, mail settings for email verification/recovery, and optional AI key in `.env`, then run from the repository root:
 
 ```sh
 docker compose up --build
 ```
 
-UI: `http://localhost:3000`; API: `http://localhost:8082`. Compose uses a separate MySQL volume and does not connect to the MySQL instance on your host.
+UI: `http://localhost:3000`; API: `http://localhost:8082`. Compose uses a separate PostgreSQL volume and does not connect to PostgreSQL on your host.
 
 ## Authentication and roles
 
-Register and log in at `/api/auth/register` and `/api/auth/login`. Registration creates a `STAFF` account and returns to sign-in; a separate login then returns a signed bearer token. Users cannot choose elevated roles during public registration. A staff member can submit a manager access request in **Settings**; an administrator reviews it in **Settings → Manager access requests**. Admins can also assign roles directly in **Workspace users**. The frontend stores the token in session storage and sends it on API requests. Sessions are persisted as token hashes, expire, and can be revoked by logout. `/api/auth/me` returns the current identity.
+Register and log in at `/api/auth/register` and `/api/auth/login`. Registration starts with the user name and email. StockWise emails a 6-digit code; the signup form validates it through `/api/auth/registration-otp/verify` before showing the password fields. The code is checked again by `/api/auth/register` when the `STAFF` account is created, so the verification cannot be bypassed by calling the API directly. The code expires after 10 minutes, allows up to 5 attempts, and can be re-requested after a 60-second cooldown. Name and password are not sent when requesting the code. Password recovery uses a 6-digit email code that expires after 10 minutes and allows up to 5 attempts. `/api/auth/forgot-password` requests a code and `/api/auth/reset-password` verifies it before changing the password. Password changes require the current password and expire existing sessions. Users cannot choose elevated roles during public registration. A staff member can submit a manager access request in **Settings**; an administrator reviews it in **Settings → Manager access requests**. Admins can also assign roles directly in **Team users**. The frontend stores the token in session storage and sends it on API requests. Sessions are persisted as token hashes, expire, and can be revoked by logout. `/api/auth/me` returns the current identity.
 
 | Capability | STAFF | MANAGER | ADMIN |
 |---|:---:|:---:|:---:|
@@ -55,11 +55,11 @@ Register and log in at `/api/auth/register` and `/api/auth/login`. Registration 
 
 ## Main API
 
-All routes below except register/login require `Authorization: Bearer <token>`.
+Registration, login, email verification, and password reset routes are public. Other API routes require `Authorization: Bearer <token>` unless marked admin-only.
 
 | Area | Routes |
 |---|---|
-| Auth | `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me`, `POST /api/auth/logout`; manager access requests `POST /api/auth/role-requests`, `GET /api/auth/role-requests/me`, admin `GET /api/auth/role-requests`, `PATCH /api/auth/role-requests/{id}`; admin `GET /api/auth/users`, `PATCH /api/auth/users/{id}/role` |
+| Auth | `POST /api/auth/registration-otp`, `POST /api/auth/registration-otp/verify`, `POST /api/auth/register`, `POST /api/auth/verify-email`, `POST /api/auth/resend-verification`, `POST /api/auth/login`, `POST /api/auth/forgot-password`, `POST /api/auth/reset-password`, `PATCH /api/auth/password`, `GET /api/auth/me`, `POST /api/auth/logout`; manager access requests `POST /api/auth/role-requests`, `GET /api/auth/role-requests/me`, admin `GET /api/auth/role-requests`, `PATCH /api/auth/role-requests/{id}`; admin `GET /api/auth/users`, `PATCH /api/auth/users/{id}/role` |
 | Products | `GET/POST /api/products`, `GET/PUT/DELETE /api/products/{id}`, `GET /api/alerts/low-stock` |
 | Suppliers | `GET/POST /api/suppliers`, `GET/PUT/DELETE /api/suppliers/{id}` |
 | Purchasing | `GET/POST /api/purchase-orders`, `PATCH /api/purchase-orders/{id}/status` |
@@ -75,7 +75,7 @@ The backend invokes models through Spring AI's `ChatClient` and OpenAI-compatibl
 
 ## Aiven deployment
 
-Set `SPRING_PROFILES_ACTIVE=aiven`, `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_DATABASE`, `MYSQL_USER`, `MYSQL_PASSWORD`, `JWT_SECRET`, `APP_CORS_ALLOWED_ORIGIN_PATTERNS=https://your-frontend-host.example`, and AI provider secrets in the backend host's secret settings. The Aiven profile requires TLS. Build the frontend with `VITE_API_URL=https://<your-api-host>/api`; deploy the static `frontend/dist` directory to a static host.
+Set `SPRING_PROFILES_ACTIVE=aiven`, `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_DATABASE`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `JWT_SECRET`, `APP_CORS_ALLOWED_ORIGIN_PATTERNS=https://your-frontend-host.example`, and AI provider secrets in the backend host's secret settings. The Aiven profile requires TLS. Build the frontend with `VITE_API_URL=https://<your-api-host>/api`; deploy the static `frontend/dist` directory to a static host.
 
 ## Data model
 

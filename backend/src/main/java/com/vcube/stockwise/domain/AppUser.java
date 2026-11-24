@@ -10,9 +10,12 @@ public class AppUser {
  @Column(nullable=false) private String displayName;
  @Column(name="password_hash",nullable=false,length=100) private String passwordHash;
  @Column(nullable=false,length=20) private String role="STAFF";
+ @Column(name="email_verified",nullable=false,columnDefinition="boolean default true") private boolean emailVerified=true;
  @Column(name="created_at",nullable=false,updatable=false) private Instant createdAt=Instant.now();
  protected AppUser(){}
  public AppUser(String email,String displayName,String passwordHash){this.username=email;this.email=email;this.displayName=displayName;this.passwordHash=passwordHash;}
  public Long getId(){return id;} public String getUsername(){return username;} public String getEmail(){return email;} public String getDisplayName(){return displayName;} public String getRole(){return role;} @JsonIgnore public String getPasswordHash(){return passwordHash;} public Instant getCreatedAt(){return createdAt;}
  public void setRole(String role){this.role=role;}
+ public boolean isEmailVerified(){return emailVerified;} public void setEmailVerified(boolean emailVerified){this.emailVerified=emailVerified;}
+ public void setPasswordHash(String passwordHash){this.passwordHash=passwordHash;}
 }

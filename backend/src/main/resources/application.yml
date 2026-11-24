@@ -1,4 +1,6 @@
 spring:
+  config:
+    import: optional:file:../.env[.properties]
   application:
     name: stockwise
   ai:
@@ -11,9 +13,17 @@ spring:
           model: ${AI_MODEL:gemini-3.5-flash-lite}
           temperature: 0.2
   datasource:
-    url: ${DATABASE_URL:jdbc:mysql://127.0.0.1:3306/supply_chain_mgmt}
-    username: ${DB_USERNAME:root}
+    url: ${DATABASE_URL:jdbc:postgresql://127.0.0.1:5432/supply_chain_mgmt}
+    username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:}
+  mail:
+    host: ${MAIL_HOST:}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail.smtp.auth: ${MAIL_AUTH:true}
+      mail.smtp.starttls.enable: ${MAIL_STARTTLS:true}
   jpa:
     hibernate:
       ddl-auto: update
@@ -29,5 +39,8 @@ server:
 app:
   jwt:
     secret: ${JWT_SECRET}
+  frontend-url: ${FRONTEND_URL:http://localhost:5173}
+  mail:
+    from: ${MAIL_FROM:${MAIL_USERNAME:}}
   cors:
     allowed-origin-patterns: ${APP_CORS_ALLOWED_ORIGIN_PATTERNS:http://localhost:*,http://127.0.0.1:*,https://*.vercel.app}

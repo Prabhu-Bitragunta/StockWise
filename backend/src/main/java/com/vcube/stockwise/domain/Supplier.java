@@ -18,7 +18,7 @@ public class Supplier {
     @Column(name="lead_time_days",nullable=false) @Min(0) private int leadTimeDays=7;
     @Column(nullable=false) @Min(0) @Max(5) private double rating=4.0;
     @Column(nullable=false,length=30) private String status="ACTIVE";
-    @Column(name="created_at",nullable=false,updatable=false,columnDefinition="datetime(6) default current_timestamp(6)") private Instant createdAt=Instant.now();
+    @Column(name="created_at",nullable=false,updatable=false,columnDefinition="timestamp(6) with time zone default current_timestamp") private Instant createdAt=Instant.now();
     @JsonIgnore @OneToMany(mappedBy="supplier") private List<Product> products=new ArrayList<>();
     @JsonIgnore @OneToMany(mappedBy="supplier") private List<PurchaseOrder> purchaseOrders=new ArrayList<>();
     protected Supplier(){}

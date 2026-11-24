@@ -24,8 +24,8 @@ public class Product {
     @Column(name="sold_last_30_days",nullable=false,columnDefinition="bigint default 0") @Min(0) private long soldLast30Days;
     @Column(name="sold_last30days",nullable=false,columnDefinition="bigint default 0") private long legacySoldLast30Days;
     @Column(nullable=false,length=30) private String unit="pcs";
-    @Column(name="created_at",nullable=false,updatable=false,columnDefinition="datetime(6) default current_timestamp(6)") private Instant createdAt=Instant.now();
-    @Column(name="updated_at",nullable=false,columnDefinition="datetime(6) default current_timestamp(6)") private Instant updatedAt=Instant.now();
+    @Column(name="created_at",nullable=false,updatable=false,columnDefinition="timestamp(6) with time zone default current_timestamp") private Instant createdAt=Instant.now();
+    @Column(name="updated_at",nullable=false,columnDefinition="timestamp(6) with time zone default current_timestamp") private Instant updatedAt=Instant.now();
     protected Product(){}
     public Product(String sku,String name,String category,int quantity,int reorderPoint,BigDecimal unitPrice,String unit,long soldLast30Days,String supplierName){this.sku=sku;this.name=name;this.category=category;this.currentStock=quantity;this.reorderLevel=reorderPoint;this.optimalStockLevel=Math.max(reorderPoint,quantity);this.unitPrice=unitPrice;this.costPrice=unitPrice.multiply(new BigDecimal("0.62")).setScale(2,java.math.RoundingMode.HALF_UP);this.unit=unit;this.soldLast30Days=soldLast30Days;this.legacySupplierName=supplierName;}
     @PrePersist void mirrorLegacyColumns(){legacyQuantity=currentStock;legacyReorderPoint=reorderLevel;legacySoldLast30Days=soldLast30Days;}

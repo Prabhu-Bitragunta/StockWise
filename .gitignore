@@ -8,3 +8,6 @@ target/
 work/
 *.log
 .DS_Store
+
+__MACOSX/
+Thumbs.db

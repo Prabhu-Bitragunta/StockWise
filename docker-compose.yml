@@ -1,27 +1,28 @@
 services:
-  mysql:
-    image: mysql:8.4
+  postgres:
+    image: postgres:17
     environment:
-      MYSQL_DATABASE: supply_chain_mgmt
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-stockwise-local-only}
+      POSTGRES_DB: ${POSTGRES_DATABASE:-supply_chain_mgmt}
+      POSTGRES_USER: ${DB_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-stockwise-local-only}
     ports:
-      - "3307:3306"
+      - "5433:5432"
     volumes:
-      - stockwise_mysql:/var/lib/mysql
+      - stockwise_postgres:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${DB_PASSWORD:-stockwise-local-only}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-postgres} -d ${POSTGRES_DATABASE:-supply_chain_mgmt}"]
       interval: 5s
       timeout: 5s
       retries: 20
   backend:
     build: ./backend
     depends_on:
-      mysql:
+      postgres:
         condition: service_healthy
     environment:
       PORT: 8082
-      DATABASE_URL: jdbc:mysql://mysql:3306/supply_chain_mgmt
-      DB_USERNAME: root
+      DATABASE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DATABASE:-supply_chain_mgmt}
+      DB_USERNAME: ${DB_USERNAME:-postgres}
       DB_PASSWORD: ${DB_PASSWORD:-stockwise-local-only}
       JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
       BOOTSTRAP_ADMIN_EMAIL: ${BOOTSTRAP_ADMIN_EMAIL:-admin@stockwise.local}
@@ -31,6 +32,14 @@ services:
       AI_API_KEY: ${AI_API_KEY:-}
       AI_BASE_URL: ${AI_BASE_URL:-https://generativelanguage.googleapis.com/v1beta/openai}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      MAIL_HOST: ${MAIL_HOST:-}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_FROM: ${MAIL_FROM:-}
+      MAIL_AUTH: ${MAIL_AUTH:-true}
+      MAIL_STARTTLS: ${MAIL_STARTTLS:-true}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
     ports:
       - "8082:8082"
   frontend:
@@ -42,4 +51,4 @@ services:
     ports:
       - "3000:80"
 volumes:
-  stockwise_mysql:
+  stockwise_postgres:

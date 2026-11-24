@@ -9,4 +9,5 @@ public interface AuthSessionRepository extends JpaRepository<AuthSession,Long> {
     Optional<AuthSession> findFirstByTokenHashAndExpiresAtAfter(String tokenHash,Instant now);
     void deleteByTokenHash(String tokenHash);
     void deleteByExpiresAtBefore(Instant now);
+    void deleteByUser_Id(Long userId);
 }

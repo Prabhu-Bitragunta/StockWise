@@ -26,7 +26,7 @@ public class SecurityConfig {
     @Bean SecurityFilterChain api(HttpSecurity http,AuthService auth)throws Exception{
         return http.csrf(csrf->csrf.disable()).cors(Customizer.withDefaults())
           .sessionManagement(s->s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-          .authorizeHttpRequests(a->a.requestMatchers("/api/auth/register","/api/auth/login","/error").permitAll().anyRequest().authenticated())
+          .authorizeHttpRequests(a->a.requestMatchers("/api/auth/register","/api/auth/registration-otp","/api/auth/registration-otp/verify","/api/auth/login","/api/auth/verify-email","/api/auth/verify-email-otp","/api/auth/resend-verification","/api/auth/forgot-password","/api/auth/reset-password","/error").permitAll().anyRequest().authenticated())
           .exceptionHandling(e->e.authenticationEntryPoint((request,response,exception)->response.sendError(401)))
           .addFilterBefore(new BearerTokenFilter(auth),UsernamePasswordAuthenticationFilter.class).build();
     }
