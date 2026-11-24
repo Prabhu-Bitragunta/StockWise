@@ -21,7 +21,7 @@ public class PendingRegistrationOtp {
     @Column(name="created_at", nullable=false)
     private Instant createdAt=Instant.now();
 
-    @Column(name="attempt_count", nullable=false)
+    @Column(name="attempt_count", nullable=false, columnDefinition="integer not null default 0")
     private int attemptCount=0;
 
     protected PendingRegistrationOtp() {}

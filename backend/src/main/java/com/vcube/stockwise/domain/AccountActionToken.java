@@ -25,7 +25,9 @@ public class AccountActionToken {
     @Column(name="created_at", nullable=false)
     private Instant createdAt=Instant.now();
 
-    @Column(name="attempt_count", nullable=false)
+    // The database may already contain token rows when Hibernate adds this field.
+    // A SQL default lets PostgreSQL populate those existing rows safely.
+    @Column(name="attempt_count", nullable=false, columnDefinition="integer not null default 0")
     private int attemptCount=0;
 
     protected AccountActionToken() {}

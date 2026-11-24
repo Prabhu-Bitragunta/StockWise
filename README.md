@@ -4,7 +4,7 @@ Responsive inventory and supply-chain management built with Spring Boot 3, Sprin
 
 ## Project layout
 
-- `backend/` — Spring Boot REST API, JPA domain, security, services, and database migration/seed logic.
+- `backend/` — Spring Boot REST API, JPA domain, security, services, and database migration logic.
 - `frontend/` — React/Vite dashboard with responsive layouts, charts, auth, inventory, supplier, purchasing, reports, and AI views.
 - `schema.sql` — reference PostgreSQL schema (the app also upgrades the existing local schema additively on startup).
 - `postman_collection.json` — API requests with token capture on login.
@@ -29,7 +29,7 @@ npm ci
 npm run dev
 ```
 
-First startup preserves existing tables and data, adds missing fields, and fills demo catalog rows only as needed. Configure `BOOTSTRAP_ADMIN_EMAIL` and `BOOTSTRAP_ADMIN_PASSWORD` in `.env`; the configured account is promoted to `ADMIN` on startup. New registrations must verify their email before signing in. Configure `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, and `MAIL_FROM` for email verification and password recovery. Passwords need at least 9 characters, including uppercase, lowercase, and a symbol. Do not use demo/bootstrap credentials in a public deployment.
+Startup preserves existing tables and data and adds missing fields; it does not insert sample catalog, supplier, order, or stock-history records. Sample rows already stored in PostgreSQL remain available after restarts. Configure `BOOTSTRAP_ADMIN_EMAIL` and `BOOTSTRAP_ADMIN_PASSWORD` in `.env`; the configured account is created or promoted to `ADMIN` on startup. New registrations must verify their email before signing in. Configure `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, and `MAIL_FROM` for email verification and password recovery. Passwords need at least 9 characters, including uppercase, lowercase, and a symbol. Do not use bootstrap credentials in a public deployment.
 
 ## Docker Compose
 
